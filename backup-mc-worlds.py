@@ -1,33 +1,12 @@
 #!/usr/bin/env python
 
 # TODO: Have world parallels compressed together under main world name?
+# TODO: Set date in archive name to date of backup, not date of archive
+# TODO: Ensure number of concurrent backups reflects the setting in YAML
 
 import yaml
 from subprocess import call
 import glob, os, datetime
-
-# backup-mc-worlds_params.yaml example:
-#
-# Root: "/home/minecraft/"
-# Backup:
-#   Path: "backup/"
-#   ArchivePath: "archive/"
-# Parallels:
-#   - "_nether"
-#   - "_the_end"
-# Servers:
-#   - Path: "paper-server/"
-#     Worlds:
-#       - Name: "world"
-#         TotalBackups: 10
-#       - Name: "skyblock"
-#         TotalBackups: 10
-#       - Name: "ilyana"
-#         TotalBackups: 3
-#   - Path: "snapshot-server/"
-#     Worlds:
-#       - Name: "world"
-#         TotalBackups: 5
 
 with open("backup-mc-worlds_params.yaml", 'r') as stream:
   params = yaml.safe_load(stream)
@@ -42,10 +21,10 @@ os.chdir(root)
 
 datetime_string = str(datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S"))
 
-def backup_world(path, name):
-  world_path = os.path.join(path, name)
+def backup_world(server_path, name):
+  world_path = os.path.join(server_path, name)
   compressed_name = f"{name}.tar.gz"
-  compressed_path = os.path.join(path, compressed_name)
+  compressed_path = os.path.join(server_path, compressed_name)
   print(f"      Backing up world at: {world_path}")
   if os.path.exists(world_path):
     print(f"         Compressing world '{name}'")
