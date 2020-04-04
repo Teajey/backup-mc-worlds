@@ -1,33 +1,13 @@
 #!/usr/bin/env python
 
 # TODO: Have world parallels compressed together under main world name?
+# TODO: Set date in archive name to date of backup, not date of archive
+# TODO: Ensure number of concurrent backups reflects the setting in YAML
 
 import yaml
 from subprocess import call
 import glob, os, datetime
-
-# backup-mc-worlds_params.yaml example:
-#
-# Root: "/home/minecraft/"
-# Backup:
-#   Path: "backup/"
-#   ArchivePath: "archive/"
-# Parallels:
-#   - "_nether"
-#   - "_the_end"
-# Servers:
-#   - Path: "paper-server/"
-#     Worlds:
-#       - Name: "world"
-#         TotalBackups: 10
-#       - Name: "skyblock"
-#         TotalBackups: 10
-#       - Name: "ilyana"
-#         TotalBackups: 3
-#   - Path: "snapshot-server/"
-#     Worlds:
-#       - Name: "world"
-#         TotalBackups: 5
+from time import ctime
 
 with open("backup-mc-worlds_params.yaml", 'r') as stream:
   params = yaml.safe_load(stream)
@@ -40,12 +20,10 @@ parallels = params["Parallels"]
 
 os.chdir(root)
 
-datetime_string = str(datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S"))
-
-def backup_world(path, name):
-  world_path = os.path.join(path, name)
+def backup_world(server_path, name):
+  world_path = os.path.join(server_path, name)
   compressed_name = f"{name}.tar.gz"
-  compressed_path = os.path.join(path, compressed_name)
+  compressed_path = os.path.join(server_path, compressed_name)
   print(f"      Backing up world at: {world_path}")
   if os.path.exists(world_path):
     print(f"         Compressing world '{name}'")
@@ -55,17 +33,25 @@ def backup_world(path, name):
       compressed_path,
       world_path
     ])
-    print(f"         Rsyncing compressed world '{name}'")
-    call([
+    rsync_call = [
       "rsync", 
       "-a",
       "-b",
       "-R",
       f"--backup-dir={archive_path}",
-      f"--suffix=.{datetime_string}",
       compressed_path,
       backup_path
-    ])
+    ]
+    old_compressed_path = os.path.join(backup_path, server_path, compressed_name);
+    print("             Does this path exist?", old_compressed_path)
+    if os.path.exists(old_compressed_path):
+        mtime = os.path.getctime(compressed_path)
+        compression_date = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d_%H%M%S")
+        print("             Previous date of compression:", compression_date)
+        rsync_call.append(f"--suffix=.{compression_date}")
+
+    print(f"         Rsyncing compressed world '{name}'")
+    # call(rsync_call)
     print(f"         Deleting compressed world '{name}'")
     call([
       "rm",
