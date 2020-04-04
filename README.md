@@ -3,6 +3,8 @@ My backup script for my Minecraft server! 🤓
 
 This script uses `rsync` to compress and backup Minecraft worlds.
 
+## Configuration
+
 Requires a configuration YAML file 'backup-mc-worlds_params.yaml' to be in the same directory as the script.
 
 Example:
@@ -29,7 +31,7 @@ Servers:
         TotalBackups: 3
 
 ```
-Explanation of parameters: 
+## Explanation of config parameters: 
 ### Root
 The directory that contains all of your minecraft server files
 ### Backup
