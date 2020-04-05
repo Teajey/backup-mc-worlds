@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 # TODO: Have world parallels compressed together under main world name?
 # TODO: Set date in archive name to date of backup, not date of archive
