@@ -8,7 +8,7 @@ import yaml
 from subprocess import call
 import glob, os, datetime
 
-with open("backup-mc-worlds_params.yaml", 'r') as stream:
+with open(os.path.join(os.path.dirname(__file__), "backup-mc-worlds_params.yaml"), 'r') as stream:
   params = yaml.safe_load(stream)
 
 root = params["Root"]
