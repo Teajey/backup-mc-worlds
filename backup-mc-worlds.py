@@ -94,7 +94,7 @@ def manage_world_backups(server_path, world_name, total_backups):
     print(f"Now managing world backups of world '{world_name}'")
     print(f"   Deleting expired '{world_name}' archives:")
     deleted_count = keep_first_n_files(
-        sorted(get_world_archives(server_path, world_name)), total_backups - 1)
+        sorted(get_world_archives(server_path, world_name), reverse=True), total_backups - 1)
     if deleted_count:
         print(
             f"      Deleted {deleted_count} expired '{world_name}' archives.")
