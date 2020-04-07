@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-# TODO: Have world parallels compressed together under main world name?
 # TODO: Set date in archive name to date of backup, not date of archive
 # TODO: Ensure number of concurrent backups reflects the setting in YAML
 
@@ -25,19 +24,17 @@ datetime_string = str(datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S"))
 
 
 def backup_world(server_path, name):
-    world_path = os.path.join(server_path, name)
-    compressed_name = f"{name}.tar.gz"
-    compressed_path = os.path.join(server_path, compressed_name)
-    print(f"      Backing up world at: {world_path}")
-    if os.path.exists(world_path):
-        print(f"         Compressing world '{name}'")
-        call([
-            "tar",
-            "-zcf",
-            compressed_path,
-            world_path
-        ])
-        print(f"         Rsyncing compressed world '{name}'")
+    print(f"   Creating new backup of '{name}' worlds")
+    main_world_path = os.path.join(server_path, name)
+
+    compress_command, compressed_path = generate_world_compression(
+        server_path, name)
+
+    print(f"      Backing up '{name}' worlds at: {server_path}")
+    if os.path.exists(main_world_path):
+        print(f"         Compressing '{name}' worlds")
+        call(compress_command)
+        print(f"         Rsyncing compressed '{name}' worlds")
         call([
             "rsync",
             "-a",
@@ -48,13 +45,33 @@ def backup_world(server_path, name):
             compressed_path,
             backup_path
         ])
-        print(f"         Deleting compressed world '{name}'")
+        print(f"         Cleaning away compressed '{name}' worlds file")
         call([
             "rm",
             compressed_path
         ])
     else:
-        print(f"         Did not find world at: {world_path}")
+        print(f"         Did not find world at: {main_world_path}")
+
+
+def generate_world_compression(server_path, name):
+    compressed_name = f"{name}.tar.gz"
+    compressed_path = os.path.join(server_path, compressed_name)
+    compress_command = [
+        "tar",
+        "-zcf",
+        compressed_path,
+    ]
+    main_world_path = os.path.join(server_path, name)
+    if os.path.exists(main_world_path):
+        compress_command.append(main_world_path)
+
+    for parallel in parallels:
+        parallel_name = f"{name}{parallel}"
+        parallel_path = os.path.join(server_path, parallel_name)
+        if os.path.exists(parallel_path):
+            compress_command.append(parallel_path)
+    return [compress_command, compressed_path]
 
 
 def get_world_archives(server_path, world_name):
@@ -83,7 +100,6 @@ def manage_world_backups(server_path, world_name, total_backups):
             f"      Deleted {deleted_count} expired '{world_name}' archives.")
     else:
         print(f"      Did not find any expired '{world_name}' archives")
-    print(f"   Creating new backup of world '{world_name}'")
     backup_world(server_path, world_name)
     print()
 
@@ -95,11 +111,6 @@ def main():
         for world in server_worlds:
             manage_world_backups(
                 server_path, world["Name"], world["TotalBackups"])
-            for parallel in parallels:
-                main_world_name = world["Name"]
-                world_name = f"{main_world_name}{parallel}"
-                manage_world_backups(server_path, world_name,
-                                     world["TotalBackups"])
 
 
 if __name__ == "__main__":
