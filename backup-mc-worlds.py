@@ -88,14 +88,19 @@ def manage_world_backups(server_path, world_name, total_backups):
     print()
 
 
-for server in servers:
-    server_path = server["Path"]
-    server_worlds = server["Worlds"]
-    for world in server_worlds:
-        manage_world_backups(
-            server_path, world["Name"], world["TotalBackups"])
-        for parallel in parallels:
-            main_world_name = world["Name"]
-            world_name = f"{main_world_name}{parallel}"
-            manage_world_backups(server_path, world_name,
-                                 world["TotalBackups"])
+def main():
+    for server in servers:
+        server_path = server["Path"]
+        server_worlds = server["Worlds"]
+        for world in server_worlds:
+            manage_world_backups(
+                server_path, world["Name"], world["TotalBackups"])
+            for parallel in parallels:
+                main_world_name = world["Name"]
+                world_name = f"{main_world_name}{parallel}"
+                manage_world_backups(server_path, world_name,
+                                     world["TotalBackups"])
+
+
+if __name__ == "__main__":
+    main()
